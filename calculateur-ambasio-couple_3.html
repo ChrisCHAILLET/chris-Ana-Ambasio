@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur AMBASIO - Couple d'Entrepreneurs</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function CalculateurAMBASIOCouple() {
+            // États pour Conjoint 1 (Vous)
+            const [modeCalcul1, setModeCalcul1] = useState(() => {
+                const saved = localStorage.getItem('ambasio_mode1');
+                return saved || 'clients'; // 'clients' ou 'manuel'
+            });
+            const [caManuel1, setCaManuel1] = useState(() => {
+                const saved = localStorage.getItem('ambasio_ca_manuel1');
+                return saved ? Number(saved) : 0;
+            });
+            const [modeFacturation1, setModeFacturation1] = useState(() => {
+                const saved = localStorage.getItem('ambasio_facturation1');
+                return saved || 'direct'; // 'direct' ou 'refacturation'
+            });
+            const [pourcentageCommission1, setPourcentageCommission1] = useState(() => {
+                const saved = localStorage.getItem('ambasio_commission1');
+                return saved ? Number(saved) : 20; // 20% par défaut
+            });
+            const [structure1, setStructure1] = useState(() => {
+                const saved = localStorage.getItem('ambasio_structure1');
+                return saved || 'sasu';
+            });
+            const [clients1, setClients1] = useState(() => {
+                const saved = localStorage.getItem('ambasio_clients1');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            // États pour Conjoint 2 (Votre compagne)
+            const [modeCalcul2, setModeCalcul2] = useState(() => {
+                const saved = localStorage.getItem('ambasio_mode2');
+                return saved || 'clients'; // 'clients' ou 'manuel'
+            });
+            const [caManuel2, setCaManuel2] = useState(() => {
+                const saved = localStorage.getItem('ambasio_ca_manuel2');
+                return saved ? Number(saved) : 0;
+            });
+            const [modeFacturation2, setModeFacturation2] = useState(() => {
+                const saved = localStorage.getItem('ambasio_facturation2');
+                return saved || 'direct'; // 'direct' ou 'refacturation'
+            });
+            const [pourcentageCommission2, setPourcentageCommission2] = useState(() => {
+                const saved = localStorage.getItem('ambasio_commission2');
+                return saved ? Number(saved) : 20; // 20% par défaut
+            });
+            const [structure2, setStructure2] = useState(() => {
+                const saved = localStorage.getItem('ambasio_structure2');
+                return saved || 'sasu';
+            });
+            const [clients2, setClients2] = useState(() => {
+                const saved = localStorage.getItem('ambasio_clients2');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            // Configuration familiale
+            const [situationFamiliale, setSituationFamiliale] = useState(() => {
+                const saved = localStorage.getItem('ambasio_situation');
+                return saved || 'pacs'; // pacs, marie, concubinage
+            });
+            
+            const [enfants, setEnfants] = useState(() => {
+                const saved = localStorage.getItem('ambasio_enfants');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            const [results1, setResults1] = useState(null);
+            const [results2, setResults2] = useState(null);
+            const [impotResults, setImpotResults] = useState(null);
+
+            // Sauvegardes automatiques
+            useEffect(() => {
+                localStorage.setItem('ambasio_mode1', modeCalcul1);
+            }, [modeCalcul1]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_ca_manuel1', caManuel1.toString());
+            }, [caManuel1]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_facturation1', modeFacturation1);
+            }, [modeFacturation1]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_commission1', pourcentageCommission1.toString());
+            }, [pourcentageCommission1]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_structure1', structure1);
+            }, [structure1]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_clients1', JSON.stringify(clients1));
+            }, [clients1]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_mode2', modeCalcul2);
+            }, [modeCalcul2]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_ca_manuel2', caManuel2.toString());
+            }, [caManuel2]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_facturation2', modeFacturation2);
+            }, [modeFacturation2]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_commission2', pourcentageCommission2.toString());
+            }, [pourcentageCommission2]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_structure2', structure2);
+            }, [structure2]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_clients2', JSON.stringify(clients2));
+            }, [clients2]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_situation', situationFamiliale);
+            }, [situationFamiliale]);
+
+            useEffect(() => {
+                localStorage.setItem('ambasio_enfants', JSON.stringify(enfants));
+            }, [enfants]);
+
+            // Forfaits AMBASIO
+            const forfaits = [
+                { id: 'starter', nom: 'Starter', prix: 99, description: 'Pour démarrer votre programme' },
+                { id: 'pro', nom: 'Pro', prix: 189, description: 'Pour les entreprises en croissance' },
+                { id: 'premium', nom: 'Premium', prix: 349, description: 'Pour les grandes organisations' },
+                { id: 'custom', nom: 'Personnalisé', prix: 0, description: 'Montant personnalisé' }
+            ];
+
+            const structures = [
+                { id: 'micro', nom: 'Micro-entreprise', color: 'bg-blue-500' },
+                { id: 'eurl', nom: 'EURL (IS)', color: 'bg-green-500' },
+                { id: 'sasu', nom: 'SASU (IS)', color: 'bg-purple-500' },
+                { id: 'portage', nom: 'Portage salarial', color: 'bg-orange-500' }
+            ];
+
+            // Gestion des clients - Conjoint 1
+            const ajouterClient1 = () => {
+                setClients1([...clients1, {
+                    id: Date.now(),
+                    nom: '',
+                    forfait: 'pro',
+                    montantMensuel: 189
+                }]);
+            };
+
+            const supprimerClient1 = (id) => {
+                setClients1(clients1.filter(c => c.id !== id));
+            };
+
+            const modifierClient1 = (id, champ, valeur) => {
+                setClients1(clients1.map(c => {
+                    if (c.id === id) {
+                        if (champ === 'forfait') {
+                            const forfaitChoisi = forfaits.find(f => f.id === valeur);
+                            return { ...c, [champ]: valeur, montantMensuel: forfaitChoisi.prix };
+                        }
+                        return { ...c, [champ]: valeur };
+                    }
+                    return c;
+                }));
+            };
+
+            // Gestion des clients - Conjoint 2
+            const ajouterClient2 = () => {
+                setClients2([...clients2, {
+                    id: Date.now(),
+                    nom: '',
+                    forfait: 'pro',
+                    montantMensuel: 189
+                }]);
+            };
+
+            const supprimerClient2 = (id) => {
+                setClients2(clients2.filter(c => c.id !== id));
+            };
+
+            const modifierClient2 = (id, champ, valeur) => {
+                setClients2(clients2.map(c => {
+                    if (c.id === id) {
+                        if (champ === 'forfait') {
+                            const forfaitChoisi = forfaits.find(f => f.id === valeur);
+                            return { ...c, [champ]: valeur, montantMensuel: forfaitChoisi.prix };
+                        }
+                        return { ...c, [champ]: valeur };
+                    }
+                    return c;
+                }));
+            };
+
+            // Gestion des enfants
+            const ajouterEnfant = () => {
+                setEnfants([...enfants, {
+                    id: Date.now(),
+                    nom: '',
+                    gardeAlternee: false // false = garde totale, true = garde alternée
+                }]);
+            };
+
+            const supprimerEnfant = (id) => {
+                setEnfants(enfants.filter(e => e.id !== id));
+            };
+
+            const modifierEnfant = (id, champ, valeur) => {
+                setEnfants(enfants.map(e => 
+                    e.id === id ? { ...e, [champ]: valeur } : e
+                ));
+            };
+
+            // Calcul du CA
+            const calculerCA = (clients) => {
+                return clients.reduce((total, client) => {
+                    const montant = parseFloat(client.montantMensuel) || 0;
+                    return total + (montant * 12);
+                }, 0);
+            };
+
+            // CA brut (avant commission si refacturation)
+            const caBrut1 = modeCalcul1 === 'clients' ? calculerCA(clients1) : caManuel1;
+            const caBrut2 = modeCalcul2 === 'clients' ? calculerCA(clients2) : caManuel2;
+
+            // CA final (avec application de la commission si refacturation)
+            const ca1 = modeFacturation1 === 'refacturation' 
+                ? caBrut1 * (pourcentageCommission1 / 100) 
+                : caBrut1;
+            
+            const ca2 = modeFacturation2 === 'refacturation' 
+                ? caBrut2 * (pourcentageCommission2 / 100) 
+                : caBrut2;
+
+            // Calcul du nombre de parts fiscales
+            const calculerPartsFiscales = () => {
+                let parts = 0;
+                
+                // Parts pour le couple
+                if (situationFamiliale === 'pacs' || situationFamiliale === 'marie') {
+                    parts = 2; // 2 parts pour un couple
+                } else {
+                    parts = 1; // 1 part si concubinage (déclaration séparée)
+                }
+
+                // Parts pour les enfants
+                enfants.forEach(enfant => {
+                    if (enfant.gardeAlternee) {
+                        parts += 0.25; // 0.25 part par enfant en garde alternée
+                    } else {
+                        parts += 0.5; // 0.5 part par enfant en garde totale
+                    }
+                });
+
+                return parts;
+            };
+
+            const nbParts = calculerPartsFiscales();
+
+            // Fonctions de calcul pour chaque structure (identiques à avant)
+            const calculateMicro = (chiffreAffaires) => {
+                const chargesSociales = chiffreAffaires * 0.22;
+                const abattement = chiffreAffaires * 0.34;
+                const baseImposable = chiffreAffaires - abattement;
+                const revenuAvantImpot = chiffreAffaires - chargesSociales;
+                
+                return {
+                    ca: chiffreAffaires,
+                    chargesSociales,
+                    baseImposable,
+                    revenuAvantImpot,
+                    impotSociete: 0
+                };
+            };
+
+            const calculateEURL = (chiffreAffaires) => {
+                const salaireBrut = 15000;
+                const chargesPatronales = salaireBrut * 0.45;
+                const chargesSalariales = salaireBrut * 0.22;
+                const salaireNet = salaireBrut - chargesSalariales;
+                
+                const beneficeAvantIS = chiffreAffaires - salaireBrut - chargesPatronales;
+                let impotSociete = beneficeAvantIS <= 42500 
+                    ? beneficeAvantIS * 0.15 
+                    : 42500 * 0.15 + (beneficeAvantIS - 42500) * 0.25;
+                
+                const beneficeNetIS = beneficeAvantIS - impotSociete;
+                const chargesSocialesDividendes = Math.max(0, beneficeNetIS - 100) * 0.172;
+                const dividendesNets = beneficeNetIS - chargesSocialesDividendes;
+                
+                return {
+                    ca: chiffreAffaires,
+                    chargesSociales: chargesPatronales + chargesSalariales + chargesSocialesDividendes,
+                    baseImposable: salaireNet + dividendesNets,
+                    revenuAvantImpot: salaireNet + dividendesNets,
+                    impotSociete
+                };
+            };
+
+            const calculateSASU = (chiffreAffaires) => {
+                const beneficeAvantIS = chiffreAffaires;
+                let impotSociete = beneficeAvantIS <= 42500 
+                    ? beneficeAvantIS * 0.15 
+                    : 42500 * 0.15 + (beneficeAvantIS - 42500) * 0.25;
+                
+                const beneficeNetIS = beneficeAvantIS - impotSociete;
+                const flatTax = beneficeNetIS * 0.30;
+                const dividendesNets = beneficeNetIS - flatTax;
+                
+                return {
+                    ca: chiffreAffaires,
+                    chargesSociales: 0,
+                    baseImposable: dividendesNets,
+                    revenuAvantImpot: dividendesNets,
+                    impotSociete
+                };
+            };
+
+            const calculatePortage = (chiffreAffaires) => {
+                const fraisGestion = chiffreAffaires * 0.08;
+                const caApresFrais = chiffreAffaires - fraisGestion;
+                const salaireBrut = caApresFrais / 1.5;
+                const salaireNet = salaireBrut * 0.78;
+                
+                return {
+                    ca: chiffreAffaires,
+                    chargesSociales: caApresFrais - salaireBrut + (salaireBrut * 0.22),
+                    baseImposable: salaireNet,
+                    revenuAvantImpot: salaireNet,
+                    impotSociete: 0
+                };
+            };
+
+            // Calcul de l'impôt sur le revenu
+            const calculerImpotRevenu = (revenu1, revenu2) => {
+                const baremeIR2025 = [
+                    { max: 11294, taux: 0 },
+                    { max: 28797, taux: 0.11 },
+                    { max: 82341, taux: 0.30 },
+                    { max: 177106, taux: 0.41 },
+                    { max: Infinity, taux: 0.45 }
+                ];
+
+                const revenuTotalFoyer = revenu1 + revenu2;
+                const quotientFamilial = revenuTotalFoyer / nbParts;
+
+                let impotParPart = 0;
+                let revenuRestant = quotientFamilial;
+                let tranchePrecedente = 0;
+
+                for (let i = 0; i < baremeIR2025.length; i++) {
+                    const tranche = baremeIR2025[i];
+                    const montantTranche = Math.min(revenuRestant, tranche.max - tranchePrecedente);
+
+                    if (montantTranche > 0) {
+                        impotParPart += montantTranche * tranche.taux;
+                        revenuRestant -= montantTranche;
+                    }
+
+                    tranchePrecedente = tranche.max;
+                    if (revenuRestant <= 0) break;
+                }
+
+                const impotBrut = impotParPart * nbParts;
+                
+                const seuilDecote = situationFamiliale === 'concubinage' ? 1929 : 3191;
+                let decote = impotBrut > 0 && impotBrut < seuilDecote ? seuilDecote - impotBrut : 0;
+                
+                const impotNet = Math.max(0, impotBrut - decote);
+                const tauxMoyen = revenuTotalFoyer > 0 ? (impotNet / revenuTotalFoyer * 100) : 0;
+
+                return {
+                    revenuTotalFoyer,
+                    nbParts,
+                    quotientFamilial,
+                    impotBrut,
+                    decote,
+                    impotNet,
+                    tauxMoyen,
+                    revenuApresImpot: revenuTotalFoyer - impotNet
+                };
+            };
+
+            // Calculs
+            useEffect(() => {
+                let result1, result2;
+                
+                switch(structure1) {
+                    case 'micro': result1 = calculateMicro(ca1); break;
+                    case 'eurl': result1 = calculateEURL(ca1); break;
+                    case 'sasu': result1 = calculateSASU(ca1); break;
+                    case 'portage': result1 = calculatePortage(ca1); break;
+                }
+                setResults1(result1);
+
+                switch(structure2) {
+                    case 'micro': result2 = calculateMicro(ca2); break;
+                    case 'eurl': result2 = calculateEURL(ca2); break;
+                    case 'sasu': result2 = calculateSASU(ca2); break;
+                    case 'portage': result2 = calculatePortage(ca2); break;
+                }
+                setResults2(result2);
+
+                if (result1 && result2) {
+                    const revenu1 = structure1 === 'micro' ? result1.baseImposable : result1.revenuAvantImpot;
+                    const revenu2 = structure2 === 'micro' ? result2.baseImposable : result2.revenuAvantImpot;
+                    const impot = calculerImpotRevenu(revenu1, revenu2);
+                    setImpotResults(impot);
+                }
+            }, [structure1, structure2, ca1, ca2, nbParts, situationFamiliale]);
+
+            // Export/Import
+            const exporterDonnees = () => {
+                const donnees = {
+                    conjoint1: { structure: structure1, clients: clients1 },
+                    conjoint2: { structure: structure2, clients: clients2 },
+                    situationFamiliale,
+                    enfants,
+                    dateExport: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(donnees, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ambasio-couple-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            const importerDonnees = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const donnees = JSON.parse(e.target.result);
+                        if (donnees.conjoint1) {
+                            setStructure1(donnees.conjoint1.structure);
+                            setClients1(donnees.conjoint1.clients);
+                        }
+                        if (donnees.conjoint2) {
+                            setStructure2(donnees.conjoint2.structure);
+                            setClients2(donnees.conjoint2.clients);
+                        }
+                        if (donnees.situationFamiliale) setSituationFamiliale(donnees.situationFamiliale);
+                        if (donnees.enfants) setEnfants(donnees.enfants);
+                        alert('✅ Données importées avec succès !');
+                    } catch (error) {
+                        alert('❌ Erreur lors de l\'import du fichier.');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            };
+
+            const reinitialiserDonnees = () => {
+                if (window.confirm('⚠️ Supprimer toutes les données ?')) {
+                    setClients1([]);
+                    setClients2([]);
+                    setEnfants([]);
+                    localStorage.clear();
+                    alert('✅ Données supprimées.');
+                }
+            };
+
+            const formatEuro = (montant) => {
+                if (montant === null || montant === undefined) return '';
+                return Math.round(montant).toLocaleString('fr-FR') + ' €';
+            };
+
+            return (
+                <div className="min-h-screen p-4 md:p-8">
+                    <div className="max-w-7xl mx-auto">
+                        {/* En-tête */}
+                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+                            <h1 className="text-3xl font-bold mb-2">
+                                👥 Calculateur AMBASIO - Couple d'Entrepreneurs
+                            </h1>
+                            <p className="text-blue-100">
+                                Gérez vos deux activités AMBASIO et calculez votre impôt commun
+                            </p>
+                        </div>
+
+                        {/* Boutons Export/Import */}
+                        <div className="bg-white rounded-lg shadow-lg p-4 mb-6 flex justify-end gap-2">
+                            <button onClick={exporterDonnees} className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
+                                📥 Exporter
+                            </button>
+                            <label className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium cursor-pointer">
+                                📤 Importer
+                                <input type="file" accept=".json" onChange={importerDonnees} className="hidden" />
+                            </label>
+                            <button onClick={reinitialiserDonnees} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">
+                                🗑️ Réinitialiser
+                            </button>
+                        </div>
+
+                        {/* Configuration familiale */}
+                        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                            <h2 className="text-xl font-bold text-gray-800 mb-4">👨‍👩‍👧‍👦 Situation familiale</h2>
+                            
+                            <div className="mb-6">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Statut du couple</label>
+                                <div className="flex gap-3">
+                                    {[
+                                        { id: 'pacs', label: 'PACS' },
+                                        { id: 'marie', label: 'Marié(e)' },
+                                        { id: 'concubinage', label: 'Concubinage' }
+                                    ].map(s => (
+                                        <button
+                                            key={s.id}
+                                            onClick={() => setSituationFamiliale(s.id)}
+                                            className={`px-4 py-2 rounded-lg font-medium ${
+                                                situationFamiliale === s.id
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="text-lg font-semibold text-gray-800">Enfants à charge</h3>
+                                    <button onClick={ajouterEnfant} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
+                                        + Ajouter un enfant
+                                    </button>
+                                </div>
+                                
+                                {enfants.length === 0 ? (
+                                    <p className="text-gray-400 text-center py-4">Aucun enfant renseigné</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {enfants.map((enfant, idx) => (
+                                            <div key={enfant.id} className="bg-gray-50 p-3 rounded-lg flex items-center gap-3">
+                                                <span className="font-bold text-gray-500">#{idx + 1}</span>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Prénom de l'enfant"
+                                                    value={enfant.nom}
+                                                    onChange={(e) => modifierEnfant(enfant.id, 'nom', e.target.value)}
+                                                    className="flex-1 p-2 border border-gray-300 rounded"
+                                                />
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={enfant.gardeAlternee}
+                                                        onChange={(e) => modifierEnfant(enfant.id, 'gardeAlternee', e.target.checked)}
+                                                        className="w-5 h-5"
+                                                    />
+                                                    <span className="text-sm font-medium">
+                                                        {enfant.gardeAlternee ? 'Garde alternée (0.25 part)' : 'Garde totale (0.5 part)'}
+                                                    </span>
+                                                </label>
+                                                <button onClick={() => supprimerEnfant(enfant.id)} className="bg-red-500 text-white px-3 py-2 rounded">
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="mt-4 bg-blue-50 p-3 rounded-lg">
+                                    <div className="text-sm font-semibold text-blue-900">
+                                        Total parts fiscales : <span className="text-xl">{nbParts}</span>
+                                    </div>
+                                    <div className="text-xs text-blue-700 mt-1">
+                                        {situationFamiliale === 'concubinage' 
+                                            ? '1 part (déclaration séparée en concubinage)'
+                                            : '2 parts (couple)'
+                                        } + {enfants.reduce((sum, e) => sum + (e.gardeAlternee ? 0.25 : 0.5), 0)} parts (enfants)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Reste du code pour les deux conjoints - à suivre dans le prochain message */}
+
+                        {/* CONJOINT 1 - Vous */}
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+                            <h2 className="text-2xl font-bold mb-4">👤 Conjoint 1 - Votre activité AMBASIO</h2>
+                            
+                            {/* Structure */}
+                            <div className="mb-4">
+                                <h3 className="font-semibold mb-2">Structure juridique</h3>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {structures.map(s => (
+                                        <button
+                                            key={s.id}
+                                            onClick={() => setStructure1(s.id)}
+                                            className={`p-2 rounded font-medium text-sm ${
+                                                structure1 === s.id
+                                                    ? 'bg-white text-blue-600'
+                                                    : 'bg-white/20 hover:bg-white/30'
+                                            }`}
+                                        >
+                                            {s.nom}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Mode de calcul du CA */}
+                            <div className="mb-4">
+                                <h3 className="font-semibold mb-2">Mode de calcul du CA</h3>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setModeCalcul1('clients')}
+                                        className={`flex-1 p-2 rounded font-medium text-sm ${
+                                            modeCalcul1 === 'clients'
+                                                ? 'bg-white text-blue-600'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        📊 Par clients
+                                    </button>
+                                    <button
+                                        onClick={() => setModeCalcul1('manuel')}
+                                        className={`flex-1 p-2 rounded font-medium text-sm ${
+                                            modeCalcul1 === 'manuel'
+                                                ? 'bg-white text-blue-600'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        ✏️ CA annuel
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Mode de facturation */}
+                            <div className="mb-4 bg-white/10 rounded-lg p-4">
+                                <h3 className="font-semibold mb-3">💼 Mode de facturation</h3>
+                                <div className="flex gap-2 mb-3">
+                                    <button
+                                        onClick={() => setModeFacturation1('direct')}
+                                        className={`flex-1 p-2 rounded font-medium text-sm ${
+                                            modeFacturation1 === 'direct'
+                                                ? 'bg-white text-blue-600'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        🎯 Direct clients
+                                    </button>
+                                    <button
+                                        onClick={() => setModeFacturation1('refacturation')}
+                                        className={`flex-1 p-2 rounded font-medium text-sm ${
+                                            modeFacturation1 === 'refacturation'
+                                                ? 'bg-white text-blue-600'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        🔄 Refacturation AMBASIO
+                                    </button>
+                                </div>
+
+                                {modeFacturation1 === 'refacturation' && (
+                                    <div>
+                                        <label className="block text-sm mb-2 font-medium">
+                                            Pourcentage de commission que vous percevez (%)
+                                        </label>
+                                        <div className="flex gap-2 items-center">
+                                            <input
+                                                type="number"
+                                                value={pourcentageCommission1}
+                                                onChange={(e) => setPourcentageCommission1(Number(e.target.value))}
+                                                className="flex-1 p-2 text-lg font-bold text-gray-900 rounded"
+                                                min="0"
+                                                max="100"
+                                                step="1"
+                                            />
+                                            <span className="text-xl font-bold">%</span>
+                                        </div>
+                                        <div className="mt-2 flex gap-2 flex-wrap">
+                                            {[10, 15, 20, 25, 30].map(pct => (
+                                                <button
+                                                    key={pct}
+                                                    onClick={() => setPourcentageCommission1(pct)}
+                                                    className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm"
+                                                >
+                                                    {pct}%
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {caBrut1 > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-white/20 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span>CA brut facturé à AMBASIO :</span>
+                                                    <span className="font-bold">{formatEuro(caBrut1)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-green-200 font-bold">
+                                                    <span>Votre commission ({pourcentageCommission1}%) :</span>
+                                                    <span>{formatEuro(ca1)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {modeFacturation1 === 'direct' && (
+                                    <p className="text-xs opacity-75">
+                                        Vous facturez directement vos clients. Le CA sera utilisé tel quel.
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Saisie CA manuel */}
+                            {modeCalcul1 === 'manuel' && (
+                                <div className="bg-white/10 rounded-lg p-4 mb-4">
+                                    <label className="block font-semibold mb-2">Chiffre d'affaires annuel (€)</label>
+                                    <input
+                                        type="number"
+                                        value={caManuel1}
+                                        onChange={(e) => setCaManuel1(Number(e.target.value))}
+                                        className="w-full p-3 text-xl font-bold text-gray-900 rounded"
+                                        min="0"
+                                        step="1000"
+                                        placeholder="Ex: 60000"
+                                    />
+                                    <div className="mt-2 flex gap-2 flex-wrap">
+                                        {[30000, 50000, 60000, 80000, 100000].map(montant => (
+                                            <button
+                                                key={montant}
+                                                onClick={() => setCaManuel1(montant)}
+                                                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm"
+                                            >
+                                                {(montant/1000)}k €
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Indicateur nombre de clients nécessaires */}
+                                    {caManuel1 > 0 && (
+                                        <div className="mt-4 pt-3 border-t border-white/20">
+                                            <div className="bg-yellow-400/20 border border-yellow-300/30 rounded-lg p-3">
+                                                <div className="text-sm font-semibold mb-1">🎯 Objectif clients</div>
+                                                <div className="text-xs opacity-90 mb-2">
+                                                    Basé sur prix moyen des forfaits : {formatEuro((99 + 189 + 349) / 3)}/mois
+                                                </div>
+                                                <div className="text-2xl font-bold">
+                                                    {Math.ceil(caManuel1 / ((99 + 189 + 349) / 3 * 12))} clients nécessaires
+                                                </div>
+                                                <div className="text-xs mt-1 opacity-75">
+                                                    Pour atteindre {formatEuro(caManuel1)} de CA annuel
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Clients */}
+                            {modeCalcul1 === 'clients' && (
+                                <div className="bg-white/10 rounded-lg p-4">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <h3 className="font-semibold">Vos clients ({clients1.length})</h3>
+                                        <button onClick={ajouterClient1} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded text-sm">
+                                            + Client
+                                        </button>
+                                    </div>
+                                    
+                                    {clients1.length === 0 ? (
+                                        <p className="text-white/60 text-sm text-center py-2">Aucun client</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {clients1.map((client, idx) => (
+                                                <div key={client.id} className="bg-white/5 p-2 rounded flex items-center gap-2 text-sm">
+                                                    <span className="text-white/60">#{idx+1}</span>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Nom"
+                                                        value={client.nom}
+                                                        onChange={(e) => modifierClient1(client.id, 'nom', e.target.value)}
+                                                        className="flex-1 p-1 rounded bg-white/10 border border-white/20 text-white placeholder-white/40"
+                                                    />
+                                                    <select
+                                                        value={client.forfait}
+                                                        onChange={(e) => modifierClient1(client.id, 'forfait', e.target.value)}
+                                                        className="p-1 rounded bg-white/10 border border-white/20 text-white"
+                                                    >
+                                                        {forfaits.map(f => (
+                                                            <option key={f.id} value={f.id} className="text-gray-900">
+                                                                {f.nom} {f.prix > 0 ? `${f.prix}€` : ''}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <input
+                                                        type="number"
+                                                        value={client.montantMensuel}
+                                                        onChange={(e) => modifierClient1(client.id, 'montantMensuel', e.target.value)}
+                                                        className="w-20 p-1 rounded bg-white/10 border border-white/20 text-white"
+                                                    />
+                                                    <span className="text-xs">€/mois</span>
+                                                    <button onClick={() => supprimerClient1(client.id)} className="text-red-300 hover:text-red-100">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Résultats */}
+                            {results1 && (
+                                <div className="mt-4 pt-4 border-t border-white/20 space-y-2">
+                                    {modeFacturation1 === 'refacturation' && caBrut1 > 0 && (
+                                        <>
+                                            <div className="flex justify-between text-sm opacity-75">
+                                                <span>CA brut (facturé à AMBASIO)</span>
+                                                <span className="font-bold">{formatEuro(caBrut1)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span>CA après commission ({pourcentageCommission1}%)</span>
+                                                <span className="font-bold text-green-200">{formatEuro(ca1)}</span>
+                                            </div>
+                                        </>
+                                    )}
+                                    {modeFacturation1 === 'direct' && (
+                                        <div className="flex justify-between text-sm">
+                                            <span>CA annuel</span>
+                                            <span className="font-bold">{formatEuro(ca1)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between text-sm">
+                                        <span>Charges sociales</span>
+                                        <span className="font-bold">{formatEuro(results1.chargesSociales)}</span>
+                                    </div>
+                                    {results1.impotSociete > 0 && (
+                                        <div className="flex justify-between text-sm">
+                                            <span>Impôt société</span>
+                                            <span className="font-bold">{formatEuro(results1.impotSociete)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/20">
+                                        <span>Revenu avant impôt</span>
+                                        <span>{formatEuro(results1.revenuAvantImpot)}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* CONJOINT 2 - Compagne */}
+                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+                            <h2 className="text-2xl font-bold mb-4">👤 Conjoint 2 - Activité AMBASIO de votre compagne</h2>
+                            
+                            {/* Structure */}
+                            <div className="mb-4">
+                                <h3 className="font-semibold mb-2">Structure juridique</h3>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {structures.map(s => (
+                                        <button
+                                            key={s.id}
+                                            onClick={() => setStructure2(s.id)}
+                                            className={`p-2 rounded font-medium text-sm ${
+                                                structure2 === s.id
+                                                    ? 'bg-white text-emerald-600'
+                                                    : 'bg-white/20 hover:bg-white/30'
+                                            }`}
+                                        >
+                                            {s.nom}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Mode de calcul du CA */}
+                            <div className="mb-4">
+                                <h3 className="font-semibold mb-2">Mode de calcul du CA</h3>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setModeCalcul2('clients')}
+                                        className={`flex-1 p-2 rounded font-medium text-sm ${
+                                            modeCalcul2 === 'clients'
+                                                ? 'bg-white text-emerald-600'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        📊 Par clients
+                                    </button>
+                                    <button
+                                        onClick={() => setModeCalcul2('manuel')}
+                                        className={`flex-1 p-2 rounded font-medium text-sm ${
+                                            modeCalcul2 === 'manuel'
+                                                ? 'bg-white text-emerald-600'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        ✏️ CA annuel
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Mode de facturation */}
+                            <div className="mb-4 bg-white/10 rounded-lg p-4">
+                                <h3 className="font-semibold mb-3">💼 Mode de facturation</h3>
+                                <div className="flex gap-2 mb-3">
+                                    <button
+                                        onClick={() => setModeFacturation2('direct')}
+                                        className={`flex-1 p-2 rounded font-medium text-sm ${
+                                            modeFacturation2 === 'direct'
+                                                ? 'bg-white text-emerald-600'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        🎯 Direct clients
+                                    </button>
+                                    <button
+                                        onClick={() => setModeFacturation2('refacturation')}
+                                        className={`flex-1 p-2 rounded font-medium text-sm ${
+                                            modeFacturation2 === 'refacturation'
+                                                ? 'bg-white text-emerald-600'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                        }`}
+                                    >
+                                        🔄 Refacturation AMBASIO
+                                    </button>
+                                </div>
+
+                                {modeFacturation2 === 'refacturation' && (
+                                    <div>
+                                        <label className="block text-sm mb-2 font-medium">
+                                            Pourcentage de commission perçue (%)
+                                        </label>
+                                        <div className="flex gap-2 items-center">
+                                            <input
+                                                type="number"
+                                                value={pourcentageCommission2}
+                                                onChange={(e) => setPourcentageCommission2(Number(e.target.value))}
+                                                className="flex-1 p-2 text-lg font-bold text-gray-900 rounded"
+                                                min="0"
+                                                max="100"
+                                                step="1"
+                                            />
+                                            <span className="text-xl font-bold">%</span>
+                                        </div>
+                                        <div className="mt-2 flex gap-2 flex-wrap">
+                                            {[10, 15, 20, 25, 30].map(pct => (
+                                                <button
+                                                    key={pct}
+                                                    onClick={() => setPourcentageCommission2(pct)}
+                                                    className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm"
+                                                >
+                                                    {pct}%
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {caBrut2 > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-white/20 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span>CA brut facturé à AMBASIO :</span>
+                                                    <span className="font-bold">{formatEuro(caBrut2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-green-200 font-bold">
+                                                    <span>Sa commission ({pourcentageCommission2}%) :</span>
+                                                    <span>{formatEuro(ca2)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {modeFacturation2 === 'direct' && (
+                                    <p className="text-xs opacity-75">
+                                        Elle facture directement ses clients. Le CA sera utilisé tel quel.
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Saisie CA manuel */}
+                            {modeCalcul2 === 'manuel' && (
+                                <div className="bg-white/10 rounded-lg p-4 mb-4">
+                                    <label className="block font-semibold mb-2">Chiffre d'affaires annuel (€)</label>
+                                    <input
+                                        type="number"
+                                        value={caManuel2}
+                                        onChange={(e) => setCaManuel2(Number(e.target.value))}
+                                        className="w-full p-3 text-xl font-bold text-gray-900 rounded"
+                                        min="0"
+                                        step="1000"
+                                        placeholder="Ex: 60000"
+                                    />
+                                    <div className="mt-2 flex gap-2 flex-wrap">
+                                        {[30000, 50000, 60000, 80000, 100000].map(montant => (
+                                            <button
+                                                key={montant}
+                                                onClick={() => setCaManuel2(montant)}
+                                                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm"
+                                            >
+                                                {(montant/1000)}k €
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Indicateur nombre de clients nécessaires */}
+                                    {caManuel2 > 0 && (
+                                        <div className="mt-4 pt-3 border-t border-white/20">
+                                            <div className="bg-yellow-400/20 border border-yellow-300/30 rounded-lg p-3">
+                                                <div className="text-sm font-semibold mb-1">🎯 Objectif clients</div>
+                                                <div className="text-xs opacity-90 mb-2">
+                                                    Basé sur prix moyen des forfaits : {formatEuro((99 + 189 + 349) / 3)}/mois
+                                                </div>
+                                                <div className="text-2xl font-bold">
+                                                    {Math.ceil(caManuel2 / ((99 + 189 + 349) / 3 * 12))} clients nécessaires
+                                                </div>
+                                                <div className="text-xs mt-1 opacity-75">
+                                                    Pour atteindre {formatEuro(caManuel2)} de CA annuel
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Clients */}
+                            {modeCalcul2 === 'clients' && (
+                                <div className="bg-white/10 rounded-lg p-4">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <h3 className="font-semibold">Ses clients ({clients2.length})</h3>
+                                        <button onClick={ajouterClient2} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded text-sm">
+                                            + Client
+                                        </button>
+                                    </div>
+                                    
+                                    {clients2.length === 0 ? (
+                                        <p className="text-white/60 text-sm text-center py-2">Aucun client</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {clients2.map((client, idx) => (
+                                                <div key={client.id} className="bg-white/5 p-2 rounded flex items-center gap-2 text-sm">
+                                                    <span className="text-white/60">#{idx+1}</span>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Nom"
+                                                        value={client.nom}
+                                                        onChange={(e) => modifierClient2(client.id, 'nom', e.target.value)}
+                                                        className="flex-1 p-1 rounded bg-white/10 border border-white/20 text-white placeholder-white/40"
+                                                    />
+                                                    <select
+                                                        value={client.forfait}
+                                                        onChange={(e) => modifierClient2(client.id, 'forfait', e.target.value)}
+                                                        className="p-1 rounded bg-white/10 border border-white/20 text-white"
+                                                    >
+                                                        {forfaits.map(f => (
+                                                            <option key={f.id} value={f.id} className="text-gray-900">
+                                                                {f.nom} {f.prix > 0 ? `${f.prix}€` : ''}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <input
+                                                        type="number"
+                                                        value={client.montantMensuel}
+                                                        onChange={(e) => modifierClient2(client.id, 'montantMensuel', e.target.value)}
+                                                        className="w-20 p-1 rounded bg-white/10 border border-white/20 text-white"
+                                                    />
+                                                    <span className="text-xs">€/mois</span>
+                                                    <button onClick={() => supprimerClient2(client.id)} className="text-red-300 hover:text-red-100">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Résultats */}
+                            {results2 && (
+                                <div className="mt-4 pt-4 border-t border-white/20 space-y-2">
+                                    {modeFacturation2 === 'refacturation' && caBrut2 > 0 && (
+                                        <>
+                                            <div className="flex justify-between text-sm opacity-75">
+                                                <span>CA brut (facturé à AMBASIO)</span>
+                                                <span className="font-bold">{formatEuro(caBrut2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span>CA après commission ({pourcentageCommission2}%)</span>
+                                                <span className="font-bold text-green-200">{formatEuro(ca2)}</span>
+                                            </div>
+                                        </>
+                                    )}
+                                    {modeFacturation2 === 'direct' && (
+                                        <div className="flex justify-between text-sm">
+                                            <span>CA annuel</span>
+                                            <span className="font-bold">{formatEuro(ca2)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between text-sm">
+                                        <span>Charges sociales</span>
+                                        <span className="font-bold">{formatEuro(results2.chargesSociales)}</span>
+                                    </div>
+                                    {results2.impotSociete > 0 && (
+                                        <div className="flex justify-between text-sm">
+                                            <span>Impôt société</span>
+                                            <span className="font-bold">{formatEuro(results2.impotSociete)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between text-lg font-bold pt-2 border-t border-white/20">
+                                        <span>Revenu avant impôt</span>
+                                        <span>{formatEuro(results2.revenuAvantImpot)}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* SYNTHÈSE FISCALE DU FOYER */}
+                        {impotResults && results1 && results2 && (
+                            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+                                <h2 className="text-2xl font-bold mb-6">💰 Synthèse fiscale du foyer</h2>
+
+                                <div className="grid md:grid-cols-3 gap-4 mb-6">
+                                    <div className="bg-white/10 p-4 rounded-lg">
+                                        <div className="text-sm opacity-90">CA total du foyer</div>
+                                        <div className="text-2xl font-bold">{formatEuro(ca1 + ca2)}</div>
+                                        <div className="text-xs mt-1 opacity-75">
+                                            {formatEuro(ca1)} + {formatEuro(ca2)}
+                                        </div>
+                                    </div>
+                                    <div className="bg-white/10 p-4 rounded-lg">
+                                        <div className="text-sm opacity-90">Revenu imposable total</div>
+                                        <div className="text-2xl font-bold">{formatEuro(impotResults.revenuTotalFoyer)}</div>
+                                        <div className="text-xs mt-1 opacity-75">
+                                            Après charges et IS
+                                        </div>
+                                    </div>
+                                    <div className="bg-white/10 p-4 rounded-lg">
+                                        <div className="text-sm opacity-90">Quotient familial</div>
+                                        <div className="text-2xl font-bold">{formatEuro(impotResults.quotientFamilial)}</div>
+                                        <div className="text-xs mt-1 opacity-75">
+                                            / {impotResults.nbParts} parts
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 bg-white/10 rounded-lg p-4 mb-4">
+                                    <div className="flex justify-between">
+                                        <span>Impôt brut</span>
+                                        <span className="font-bold">{formatEuro(impotResults.impotBrut)}</span>
+                                    </div>
+                                    {impotResults.decote > 0 && (
+                                        <div className="flex justify-between text-green-200">
+                                            <span>Décote</span>
+                                            <span className="font-bold">- {formatEuro(impotResults.decote)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between text-xl font-bold border-t border-white/20 pt-3">
+                                        <span>IMPÔT SUR LE REVENU</span>
+                                        <span>{formatEuro(impotResults.impotNet)}</span>
+                                    </div>
+                                    <div className="text-sm opacity-90">
+                                        Soit ≈ {formatEuro(impotResults.impotNet / 12)}/mois
+                                    </div>
+                                </div>
+
+                                <div className="bg-green-500/30 border-2 border-green-300 p-5 rounded-lg">
+                                    <div className="text-sm opacity-90 mb-2">💵 REVENU NET FINAL DU FOYER</div>
+                                    <div className="text-4xl font-bold mb-2">{formatEuro(impotResults.revenuApresImpot)}</div>
+                                    <div className="text-lg">
+                                        Soit ≈ {formatEuro(impotResults.revenuApresImpot / 12)}/mois pour le foyer
+                                    </div>
+                                    <div className="text-sm mt-3 opacity-90">
+                                        Taux moyen d'imposition : {impotResults.tauxMoyen.toFixed(2)}%
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Notes */}
+                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg">
+                            <h3 className="font-bold text-yellow-800 mb-2">📌 Notes importantes</h3>
+                            <ul className="text-sm text-yellow-800 space-y-1">
+                                <li>• <strong>💾 Sauvegarde automatique :</strong> Toutes vos données sont sauvegardées automatiquement</li>
+                                <li>• <strong>Enfants :</strong> Garde alternée = 0,25 part / Garde totale = 0,5 part</li>
+                                <li>• <strong>Concubinage :</strong> Déclaration séparée = 1 part au lieu de 2</li>
+                                <li>• <strong>Barème 2025 :</strong> Calcul avec tranches progressives d'imposition</li>
+                                <li>• <strong>Important :</strong> Simulations à titre indicatif, consultez un expert-comptable</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<CalculateurAMBASIOCouple />);
+    </script>
+</body>
+</html>
